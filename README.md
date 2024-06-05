@@ -1,7 +1,7 @@
 # Contacts
  A project to implement a database using a graphical interface. The task itself for its implementation was generated in a neural network.
 
-Данное задание было получено от нейросети ChatGPT 3.
+Само задание было получено от нейросети ChatGPT 3.
 
 Задание:
 "Внедрение системы управления контактами.
