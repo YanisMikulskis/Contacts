@@ -22,7 +22,7 @@
 # ошибками в Python. Не стесняйтесь расширять или изменять требования в соответствии с вашими предпочтениями. Удачи!
 
 # В коде имеются некоторые комментарии для облегчения понимания и восприятия. Более подробные и глубокие пояснения о
-# работе программы см. в приложенном файле README_PYQT5.md. Основные блоки кода (функции и методы) разделены пунктиром
+# работе программы см. в приложенном файле README.md. Основные блоки кода (функции и методы) разделены пунктиром
 # для удобного восприятия
 import random
 import sqlite3
@@ -81,13 +81,13 @@ commands = {
 # -----------------------
 class App:  # главный класс приложения
     def __init__(self):
-        self.lines: list = None
-        self.temporary: list = None
-        self.mail_line: QLineEdit = None
-        self.name_line: QLineEdit = None
-        self.number_line: QLineEdit = None
-        self.id_line: QLineEdit = None
-        self.line: QLineEdit = None
+        self.lines: list = None  # атрибут для временного списка полей ввода
+        self.temporary: list = None # атрибут для временного списка виджетов
+        self.mail_line: QLineEdit = None # атрибут для поля ввода почты
+        self.name_line: QLineEdit = None # атрибут для поля ввода имени
+        self.number_line: QLineEdit = None # атрибут для поля ввода номера
+        self.id_line: QLineEdit = None # атрибут для поля ввода id
+        self.line: QLineEdit = None # атрибут для поля ввода id
         self.widgets_collection: list = []
         # self.widgets_collection - коллекция всех виджетов текущей страницы. Нужна, чтобы при переходе на другую
         # страницу экран очищался за счет манипуляций с данной коллекцией, а после коллекция будет заполняться
