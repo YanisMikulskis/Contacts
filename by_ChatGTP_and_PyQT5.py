@@ -35,6 +35,7 @@ from faker import Faker
 from Widgets import Window, Label, Button, Line, Table, MessageBox, CheckBox
 from PyQt5.QtWidgets import QApplication, QTableWidget, QWidget, QMessageBox, QLabel, QPushButton, QCheckBox
 from PyQt5.QtCore import Qt
+from typing import Callable
 
 app = QApplication(sys.argv)
 
@@ -82,12 +83,12 @@ commands = {
 class App:  # главный класс приложения
     def __init__(self):
         self.lines: list = None  # атрибут для временного списка полей ввода
-        self.temporary: list = None # атрибут для временного списка виджетов
-        self.mail_line: QLineEdit = None # атрибут для поля ввода почты
-        self.name_line: QLineEdit = None # атрибут для поля ввода имени
-        self.number_line: QLineEdit = None # атрибут для поля ввода номера
-        self.id_line: QLineEdit = None # атрибут для поля ввода id
-        self.line: QLineEdit = None # атрибут для поля ввода id
+        self.temporary: list = None  # атрибут для временного списка виджетов
+        self.mail_line: QLineEdit = None  # атрибут для поля ввода почты
+        self.name_line: QLineEdit = None  # атрибут для поля ввода имени
+        self.number_line: QLineEdit = None  # атрибут для поля ввода номера
+        self.id_line: QLineEdit = None  # атрибут для поля ввода id
+        self.line: QLineEdit = None  # атрибут для поля ввода id
         self.widgets_collection: list = []
         # self.widgets_collection - коллекция всех виджетов текущей страницы. Нужна, чтобы при переходе на другую
         # страницу экран очищался за счет манипуляций с данной коллекцией, а после коллекция будет заполняться
@@ -111,9 +112,12 @@ class App:  # главный класс приложения
 
     # Статичные методы для манипуляций с данными
     # -------------------------------------------
-    # Стат. метод для проверки введенных (или измененных) значений для телефона и почты
+
     @staticmethod
     def patterns(data: str, meta: str) -> bool:
+        """
+        Стат. метод для проверки введенных (или измененных) значений для телефона и почты
+        """
         if data == 'inp_num':
             if meta in re.findall(r'\d{11}|[+]\d{11}', meta):
                 return True
@@ -136,19 +140,23 @@ class App:  # главный класс приложения
     # при проверке значений, которые вводятся в update(при обновлении базы данных)
 
     # -------------------------------------------
-    # Стат. метод превращения fetchall (списка кортежей найденных строк) в список с подсписками и превращение всех
-    # элементов подсписков в строки для отображения в БД
     @staticmethod
     def found_contacts(fetchall: list) -> list:
+        """
+        Стат. метод превращения fetchall (списка кортежей найденных строк) в список с подсписками и превращение всех
+        элементов подсписков в строки для отображения в БД
+        """
         result = list(map(list, fetchall))  # избавляемся от кортежей
         result = list(map(lambda item: list(map(str, item)), result))  # превращаем элементы подсписков в строки
         return result
 
     # -------------------------------------------
-    # Стат. метод игнорирования ошибки RunTimeError. У нас она возникает, когда мы хотим удалить виджет, к которому
-    # ранее уже был применен метод del_widget().
     @staticmethod
-    def ignore_RunTimeError(widget: QWidget) -> Ellipsis:
+    def ignore_RunTimeError(widget: QWidget) -> None:
+        """
+        Стат. метод игнорирования ошибки RunTimeError. У нас она возникает, когда мы хотим удалить виджет, к которому
+        ранее уже был применен метод del_widget().
+        """
         try:
             widget.del_widget()
         except RuntimeError:
@@ -156,54 +164,78 @@ class App:  # главный класс приложения
 
     # -------------------------------------------
     # -----Вспомогательные методы для работы с интерфейсом (пояснения по каждому методу написаны рядом с ними)
-    def clear_page(self):  # метод очистки страницы от виджетов
+    def clear_page(self) -> None:
+        """
+        Метод очистки страницы от виджетов
+        """
         for widget in self.widgets_collection:
             self.ignore_RunTimeError(widget=widget)
         # выше применяем метод .ignore_RunTimeError ко всем виджетам в коллекции виджетов для чистого удаления
         self.widgets_collection.clear()  # проводим контрольную очистку списка (на случай оставления ссылок в нем)
 
-    def home_page(self):  # метод возврата на начальную страницу
+    def home_page(self) -> None:
+        """
+        Метод возврата на начальную страницу
+        """
         self.clear_temporary(True)  # очищаем временные списки
         self.clear_page()  # очищаем текущую страницу (на которой был вызван данный метод через кнопку)
         self.page_commands()  # применяем конструктор первой страницы
 
-    def messagebox_method(self, content: str, content_button: str,
-                          level_message: str) -> QMessageBox:  # метод создания всплывающего окна уведомлений
+    def messagebox_method(self, content: str, content_button: str, level_message: str) -> QMessageBox:
+        """
+        Метод создания всплывающего окна уведомлений
+        """
         msg = MessageBox(content, content_button, level_message)
         self.widgets_collection.append(msg)
         return msg
 
-    def label_method(self, right: int, down: int, content: str) -> QLabel:  # метод для размещения надписи
+    def label_method(self, right: int, down: int, content: str) -> QLabel:
+        """
+        Метод для размещения надписи
+        """
         label = Label(window, right, down, content)
         self.widgets_collection.append(label)
         return label
 
-    def button_method(self, content: str, right: int, down: int, size: int,
-                      func: object) -> QPushButton:  # метод для создания кнопки с функцией внутри при клике
+    def button_method(self, content: str, right: int, down: int, size: int, func: Callable) -> QPushButton:
+        """
+        Метод для создания кнопки с функцией внутри при клике
+        """
         button = Button(window, content, right, down, size)
         button.click(func)
         self.widgets_collection.append(button)
         return button
 
-    def table_method(self, data: list) -> QTableWidget:  # метод для создания таблицы
+    def table_method(self, data: list) -> QTableWidget:
+        """
+        Метод для создания таблицы
+        """
         table = Table(window, data)
         self.widgets_collection.append(table)
         return table
 
     def checkbox_method(self, right: int, down: int, content: str) -> QCheckBox:
+        """
+        Метод для создания кнопки вкл/выкл
+        """
         checkbox_ex = CheckBox(window=window, content=content, right=right, down=down)
         self.widgets_collection.append(checkbox_ex)
         return checkbox_ex
 
-    def search_data_method(self, content: str,
-                           column: str):  # метод для поиска контакта по 1 из 3 значений(имя, номер, почта)
+    def search_data_method(self, content: str, column: str) -> None:
+        """
+        Метод для поиска контакта по 1 из 3 значений(имя, номер, почта)
+        """
         self.clear_page()
         self.label_method(right=200, down=50, content=content)
         self.line = Line(window, right=200, down=70, size=200)
         self.line.line.show()
         self.widgets_collection.append(self.line)
 
-        def search():  # сама функция поиска
+        def search() -> None:
+            """
+            Сама функция поиска
+            """
             line = self.line.line.text()
             if column == 'name':
                 db_cont.cursor.execute('''SELECT * FROM Contacts_list WHERE name = :name;''',
@@ -221,11 +253,16 @@ class App:  # главный класс приложения
         self.button_method(content='Найти контакт', right=150, down=400, size=300, func=search)
         self.back_button()
 
-    def back_button(self):  # метод возврата на стартовую страницу с командами
+    def back_button(self) -> None:
+        """
+        Метод возврата на стартовую страницу с командами
+        """
         self.button_method(content=f'Назад к списку команд', right=150, down=450, size=300, func=self.home_page)
-        # print(self.temporary)
 
-    def view_table(self, id_field: bool):  # метод отображения всей таблицы (БД)
+    def view_table(self, id_field: bool) -> None:
+        """
+        Метод отображения всей таблицы (БД)
+        """
         db_cont.cursor.execute('''SELECT * FROM Contacts_list;''')
 
         result_data = self.found_contacts(db_cont.cursor.fetchall())
@@ -239,7 +276,10 @@ class App:  # главный класс приложения
 
     # Методы отображения страниц, которые привязаны к определенной команде со стартовой страницы
     # --------------------------
-    def page_commands(self):  # метод отображения стартовой страницы с командами
+    def page_commands(self) -> None:
+        """
+        Метод отображения стартовой страницы с командами
+        """
         self.clear_page()
         self.label_method(right=240, down=50, content='Выберите команду')
         button_right, button_down, number_button = 150, 75, 1
@@ -253,12 +293,15 @@ class App:  # главный класс приложения
             number_button = number_button + 1 if number_button < 10 else 0
 
     # --------------------------
-    def page_insert(self):  # метод добавления данных в таблицу (БД)
+    def page_insert(self) -> None:
+        """
+        Метод добавления данных в таблицу (БД)
+        """
         self.clear_page()
 
         self.label_method(right=200, down=30, content='Добавить нового пользователя')
 
-        self.label_method(right=200, down=50, content='Введите имя')
+        self.label_method(right=200, down=50, content='Введите имя')  # создание виджета текста
         self.name_line = Line(window, right=200, down=70, size=200)
         self.name_line.line.show()
         self.widgets_collection.append(self.name_line)
@@ -268,13 +311,16 @@ class App:  # главный класс приложения
         self.number_line.line.show()
         self.widgets_collection.append(self.number_line)
 
-        self.label_method(right=200, down=180, content='Введите почту')
+        self.label_method(right=200, down=180, content='Введите почту')  # создание виджета текста
         self.mail_line = Line(window, right=200, down=200, size=200)
         self.mail_line.line.show()
         self.widgets_collection.append(self.mail_line)
 
         # --------------------------------
-        def insert_database():  # метод вставки данные в таблицу (БД)
+        def insert_database() -> None:
+            """
+            Метод вставки данные в таблицу (БД)
+            """
             name_user = self.name_line.line.text()
             number_user = self.number_line.line.text()
             mail_user = self.mail_line.line.text()
@@ -318,17 +364,29 @@ class App:  # главный класс приложения
         self.back_button()
 
     # --------------------------
-    def page_search_name(self):  # метод нахождения контакта, мы его запускаем на странице поиска
+    def page_search_name(self) -> None:
+        """
+        Метод нахождения контакта по имени
+        """
         self.search_data_method(content=f'Поиск контакта по имени (введите имя)', column='name')
 
-    def page_search_number_mail(self):  # метод нахождения контакта по почте или телефону
+    def page_search_number_mail(self) -> None:
+        """
+        Метод нахождения контакта по почте или телефону
+        """
         self.clear_page()
         self.label_method(right=150, down=50, content=f'По каким данным вы хотите найти контакт?')
 
-        def search_number():
+        def search_number() -> None:
+            """
+            Метод нахождения контакта по номеру
+            """
             self.search_data_method(content='Введите номер телефона', column='number')
 
-        def search_mail():
+        def search_mail() -> None:
+            """
+            Метод нахождения контакта по электронной почте
+            """
             self.search_data_method(content='Введите электронную почту', column='email')
 
         self.button_method(content='Найти по номеру телефона', right=150, down=125, size=300, func=search_number)
@@ -338,12 +396,24 @@ class App:  # главный класс приложения
 
     # --------------------------
 
-    def page_update(self):  # страница метода обновления данных контакта.
-        self.clear_temporary(True)
+    def page_update(self) -> None:
+        """
+        Страница метода обновления данных контакта
+        В ней первой строкой мы очищаем временный список. Даже если он еще не создан, программа не падает благодаря
+        магическому методу __gettatr__. Не созданный объект возвращает то, что возвращает этот метод, т.е. 0
+        """
+        self.clear_temporary(True)  # очищаем временный список
         self.clear_page()  # очищаем страницу
 
-        def page_update_local():  # следующая страница метода
-            def query_update(*args):  # Функция внесения изменений в БД
+        def page_update_local():
+            """
+            Следующая страница метода
+            """
+
+            def query_update(*args):
+                """
+                Функция внесения изменений в БД
+                """
                 name, number, email = args  # Данные для БД
                 db_cont.cursor.execute('''UPDATE Contacts_list SET name=:name, number_phone=:number,email=:email
                                         WHERE id=:id;''', dict(name=name, number=number, email=email, id=self.id_text))
@@ -365,13 +435,19 @@ class App:  # главный класс приложения
                 self.table_method(self.result_data)  # показ выбранного контакта в табличном виде
                 self.label_method(right=160, down=100, content='Вы хотите изменить одно значение или все?')  # надпись
 
-                def one_value():  # функция изменения ОДНОГО значения
+                def one_value():
+                    """
+                    Функция изменения ОДНОГО значения
+                    """
                     self.clear_temporary()  # безопасная очистка временного списка self.temporary
 
                     label = self.label_method(right=225, down=150, content='Какое хотите изменить?')  # надпись
                     self.temporary.append(label)  # добавляем надпись во временный список
 
-                    def line_for_change(data_change):  # Функция с полем для ввода новых данных
+                    def line_for_change(data_change):
+                        """
+                        Функция с полем для ввода новых данных
+                        """
                         self.clear_temporary()  # очищаем и пересоздаем self.temporary
 
                         self.label = self.label_method(right=200,
@@ -385,7 +461,10 @@ class App:  # главный класс приложения
                         # self.widgets_collection.append(self.line_data)  # добавление виджета поля к общим виджетам
                         self.temporary.append(self.line_data)  # добавление виджета поля во временный список
 
-                        def change_data():  # функция, вызывающая query_update, если все ок.
+                        def change_data():
+                            """
+                            Функция, вызывающая query_update, если все ок
+                            """
                             new_data, contacts = self.line_data.line.text(), self.result_data[0][1:]
                             if data_change == 'Имя':  # если хотим изменить Имя контакта
                                 contacts[0] = new_data  # меняем его по индексу в списке данных контакта
@@ -411,7 +490,7 @@ class App:  # главный класс приложения
                                                            func=change_data)  # кнопка запуска функции change_data
                         self.temporary.append(change_button)  # добавление во временный список кнопки
                         self.back = self.button_method(content='Назад', right=245, down=375, size=100, func=one_value)
-                        self.temporary.append(self.back)  # размещение кнопки "назад" и добавление ее во врем. список
+                        self.temporary.append(self.back)  # Размещение кнопки "назад" и добавление ее во врем. список
 
                     functions_button = {
                         0: lambda: line_for_change(data_change='Имя'),
@@ -429,21 +508,26 @@ class App:  # главный класс приложения
                         down += 25
                         self.temporary.append(btn)
 
-                def all_value():  # функция изменения ВСЕХ значений в строке контакта
+                def all_value():
+                    """
+                    Функция изменения ВСЕХ значений в строке контакта
+                    """
                     self.clear_temporary()  # вызов метода очищения временного списка с виджетами
                     down_label = 160  # координата низа верхней (первой) надписи
                     self.lines = []  # временный список для полей типа QLineWidget
                     for field in ['Имя', 'Номер телефона', 'Почта']:  # цикл по именам колонн таблицы
                         label = self.label_method(right=230, down=down_label, content=field)  # надпись
                         self.temporary.append(label)  # добавление надписи во временный список
-
                         line_data = Line(window, right=230, down=down_label + 20, size=130)  # поле ввода
                         line_data.line.show()  # размещение поля ввода
                         self.lines.append(line_data)  # добавление поля ввода во временный список для полей
                         self.temporary.append(line_data)
                         down_label += 50
 
-                    def change_data():  # функция, вызывающая query_update, если все ок.
+                    def change_data():
+                        """
+                        Функция, вызывающая query_update, если все о
+                        """
                         text_number = self.lines[1].line.text()  # введенный текст нового номера.
                         text_mail = self.lines[2].line.text()  # введенный текст новой почты
                         patterns_ok = [self.patterns(data='inp_num', meta=text_number),
@@ -462,7 +546,10 @@ class App:  # главный класс приложения
                                                        func=change_data)
                     self.temporary.append(change_button)
 
-                def some_value():  # функция изменения НЕСКОЛЬКИХ значений
+                def some_value():
+                    """
+                    Функция изменения НЕСКОЛЬКИХ значений
+                    """
                     self.clear_temporary()  # вызов метода очищения временного списка с виджетами
                     label = self.label_method(right=215, down=150, content='Выберите, что хотите поменять')
                     self.temporary.append(label)
@@ -472,7 +559,10 @@ class App:  # главный класс приложения
                         checkbox_down += 25
                         self.temporary.append(check)
 
-                    def data_selection():  # в этой функции размещаются поля ввода для включенных кнопок
+                    def data_selection():
+                        """
+                        В этой функции размещаются поля ввода для включенных кнопок
+                        """
                         down = 200
                         for widget in self.temporary:
                             if hasattr(widget, 'checkbox') and widget.checkbox.checkState():
@@ -498,7 +588,10 @@ class App:  # главный класс приложения
                             self.temporary.append(self.change)
                             self.temporary.append(self.back)
 
-                    def change_data():  # функция, вызывающая query_update, если все ок.
+                    def change_data():
+                        """
+                        Функция, вызывающая query_update, если все ок
+                        """
                         text_lines_bool = all([i[1].line.text() for i in self.temporary if isinstance(i, list)])
                         if not text_lines_bool:  # если не все выбранные поля заполнены
                             self.messagebox_method(content='Не все поля заполнены!',
@@ -507,7 +600,10 @@ class App:  # главный класс приложения
                         else:  # если все ок
                             text_data, contact = [], self.result_data[0][1:]
 
-                            def mutate_contact(db_column: int, data: str):  # функция изменение данных в столбце
+                            def mutate_contact(db_column: int, data: str):
+                                """
+                                Функция изменение данных в столбце
+                                """
                                 contact[db_column] = data
 
                             mutate_functions = {
@@ -547,11 +643,17 @@ class App:  # главный класс приложения
         self.button_method(content='Назад', right=470, down=450, size=100, func=self.home_page)  # кнопка "Назад"
 
     # --------------------------
-    def del_page(self):  # метод удаления страницы
+    def del_page(self):
+        """
+        Метод удаления страницы
+        """
         self.clear_page()  # очищаем страницу
         self.view_table(id_field=True)  # показываем таблицу с полем ввода
 
-        def del_contact():  # функция удаления контакта
+        def del_contact():
+            """
+            Функция удаления контакта
+            """
             del_id = field_del.line.text()  # введенный id сохраняем в переменную
             db_cont.cursor.execute('''SELECT * FROM Contacts_list;''')  # выбор всей БЖ
             all_contacts_id = [contact[0] for contact in self.found_contacts(db_cont.cursor.fetchall())]  # все id из БД
@@ -568,7 +670,10 @@ class App:  # главный класс приложения
         self.button_method(content='Назад', right=470, down=450, size=100, func=self.home_page)  # кнопка возврата
 
     # --------------------------
-    def record_yaml_page(self):  # Метод записи базы данных в файл YAML-формата.
+    def record_yaml_page(self):
+        """
+        Метод записи базы данных в файл YAML-формата
+        """
         db_cont.cursor.execute('''SELECT * FROM Contacts_list;''')  # Выбираем всю БД
         tuple_users = db_cont.cursor.fetchall()  # Выбираем все данные из БД в кортеж.
         dict_contacts = {'База контактов':
@@ -583,11 +688,14 @@ class App:  # главный класс приложения
                                level_message='Info')  # Сообщение о загрузке
 
     # --------------------------
-    def load_from_yaml(self):  # метод выгрузки данных из файла YAML
+    def load_from_yaml(self) -> None:
+        """
+        Метод выгрузки данных из файла YAML
+        """
         self.clear_page()
         with open('contacts_file_PYQT5.yaml') as file_for_load:
             data_dict = yaml.load(file_for_load, Loader=FullLoader)  # выгрузка из файла yaml в словарь
-        print(data_dict)
+
         values_data = list(data_dict.values())  # первичные значения словаря
 
         keys_data = list(values_data[0].keys())  # Ключи из списка выше. Содержит слово "контакт" и его id.
@@ -606,12 +714,18 @@ class App:  # главный класс приложения
         self.button_method(content='Назад', right=470, down=450, size=100, func=self.home_page)  # кнопка возврата
 
     # --------------------------
-    def clear_table(self):  # метод для полной очистки таблицы
+    def clear_table(self) -> None:
+        """
+        Метод для полной очистки таблицы
+        """
         self.clear_page()  # очищаем страницу
         self.view_table(id_field=False)  # показ таблицы без поля ввода первичного ключа
         self.label_method(right=500, down=50, content='Очистить\nтаблицу?')  # надпись с вопросом
 
-        def clear():  # функция очистки
+        def clear():
+            """
+            Функция очистки
+            """
             message = self.messagebox_method(content='Таблица будет полностью очищена!\nВы уверены?',
                                              content_button=None,
                                              level_message='Question')  # всплывающее окно
@@ -627,7 +741,10 @@ class App:  # главный класс приложения
                            func=self.home_page)  # кнопка возврата в меню
 
     # --------------------------
-    def random_values(self):  # метод генерации случайных данных
+    def random_values(self) -> None:
+        """
+        Метод генерации случайных данных
+        """
         self.clear_page()  # очищаем страницу
         faker_ = Faker('ru-RU')  # экземпляр класса Faker с настройками для данных на латинице
         space = ' '  # пробел для конкатенации
@@ -636,7 +753,10 @@ class App:  # главный класс приложения
         quantity.line.show()  # размещение поля
         self.widgets_collection.append(quantity)  # добавляем в главную коллекцию виджетов
 
-        def insert_random():  # функция генерации данных
+        def insert_random() -> None:
+            """
+            Функция генерации данных
+            """
             quantity_contacts = int(quantity.line.text())  # введенная цифра числа контактов, которые нужно создать
             try:
                 for i in range(quantity_contacts):  # на каждой итерации цикла генерируется один контакт
@@ -658,22 +778,35 @@ class App:  # главный класс приложения
         self.back_button()  # кнопка возврата и генерации контактов
 
     # --------------------------
-    def view_page(self):  # метод показа страницы со всей базой данных в табличном виде
+    def view_page(self) -> None:
+        """
+        Метод показа страницы со всей базой данных в табличном виде
+        """
         self.clear_page()  # очищаем страницу
         self.view_table(id_field=False)  # показываем таблицу
         self.button_method(content='Назад', right=470, down=450, size=100, func=self.home_page)  # кнопка возврата
 
     # --------------------------
-    def __getattr__(self, item: list) -> False:  # Маг. метод для обхода ошибки при несуществующих атрибутах класса
+    def __getattr__(self, item: list) -> int:
+        """
+        Маг. метод для обхода ошибки при несуществующих атрибутах класса
+        """
         return 0
 
     # --------------------------
-    def clear_temporary(self, *all_lists: bool) -> list:  # метод очистки временных списков
-        def exam_widget(wid):
+    def clear_temporary(self, *all_lists: bool) -> list:
+        """
+        Метод очистки временных списков
+        """
+
+        def exam_widget(wid: QWidget) -> None:
+            """
+            Функция индивидуального удаления виджета или списка виджетов
+            """
             wid.del_widget() if not isinstance(wid, list) else [element.del_widget() for element in wid]
 
         if self.temporary and len(self.temporary) > 0:
-            [exam_widget(widget) for widget in self.temporary]
+            [exam_widget(wid=widget) for widget in self.temporary]
             self.temporary = []
         else:
             self.temporary = []
@@ -686,7 +819,10 @@ class App:  # главный класс приложения
 
 
 # --------------------------
-def main():
+def main() -> None:
+    """
+    Головная функция запуска
+    """
     App()
     window.show()
     sys.exit(app.exec_())
